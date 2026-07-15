@@ -1,1 +1,25 @@
+syntax = "proto3";
 
+package exam.proctoring.identity;
+
+option java_package = "com.examproctoring.identity";
+option java_multiple_files = true;
+
+// Service 1 (Identity Verification Service)
+// Simulates an ID verification device that authorise a student before an examination begins.
+service IdentityVerificationService {
+  // Unary RPC - verifies student identity before give an access exam access
+  rpc VerifyIdentity (VerifyRequest) returns (VerifyResponse);
+}
+
+message VerifyRequest {
+  string studentId = 1;      // Student's unique ID
+  string examId = 2;         // ID of the examination
+  string faceImageHash = 3;  // Hash of the camera image used for verification
+}
+
+message VerifyResponse {
+  bool verified = 1;         // Whether the student was successfully verified
+  string sessionToken = 2;   // Token generated after successful verification, allows exam access
+  string message = 3;        // Additional information about the verification result
+}

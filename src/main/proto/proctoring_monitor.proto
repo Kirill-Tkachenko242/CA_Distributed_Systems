@@ -1,1 +1,6 @@
+syntax = "proto3";
 
+package exam.proctoring.monitor;
+
+option java_package = "com.examproctoring.monitor";
+option java_multiple_files = true;

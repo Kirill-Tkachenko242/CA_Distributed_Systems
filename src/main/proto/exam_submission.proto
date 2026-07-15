@@ -1,1 +1,8 @@
+syntax = "proto3";
+
+package exam.proctoring.submission;
+
+option java_package = "com.examproctoring.submission";
+option java_multiple_files = true;
+
 
