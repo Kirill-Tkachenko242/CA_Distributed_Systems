@@ -4,3 +4,35 @@ package exam.proctoring.monitor;
 
 option java_package = "com.examproctoring.monitor";
 option java_multiple_files = true;
+
+// Service 2 (Proctoring Monitor Service)
+// Simulates a smart monitoring system that observes the student throughout the exam using simulated camera and microphone data.
+service ProctoringMonitorService {
+  // Client Streaming RPC - client continuously sends monitoring data (movement, audio level, gaze direction) throughout the exam
+  rpc StreamActivityFeed (stream ActivityFrame) returns (ActivitySummary);
+
+  // Server Streaming RPC - server continuously pushes alerts to the client
+  rpc LiveAlertFeed (AlertSubscription) returns (stream Alert);
+}
+
+message ActivityFrame {
+  int64 timestamp = 1;
+  float motionScore = 2;
+  float audioLevel = 3;
+  string gazeDirection = 4;
+}
+
+message ActivitySummary {
+  int32 flagCount = 1;
+  string summary = 2;
+}
+
+message AlertSubscription {
+  string sessionToken = 1;
+}
+
+message Alert {
+  string alertType = 1;
+  int32 severity = 2;
+  int64 timestamp = 3;
+}

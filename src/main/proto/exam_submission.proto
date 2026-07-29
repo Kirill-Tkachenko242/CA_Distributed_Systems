@@ -5,4 +5,31 @@ package exam.proctoring.submission;
 option java_package = "com.examproctoring.submission";
 option java_multiple_files = true;
 
+// Service 3 (Exam Submission and Integrity Service)
+// Manages communication between the student and the remote proctor. Also handles the final exam submission.
+service ExamSubmissionService {
+  // Bidirectional Streaming RPC - student and proctor exchange messages during the examination at the same time
+  rpc ProctorChatSession (stream ChatMessage) returns (stream ChatMessage);
+
+  // Unary RPC - handles final exam submission
+  rpc SubmitExam (SubmissionRequest) returns (SubmissionResponse);
+}
+
+message ChatMessage {
+  string sender = 1;
+  string text = 2;
+  int64 timestamp = 3;
+}
+
+message SubmissionRequest {
+  string sessionToken = 1;
+  repeated string answers = 2;
+  int64 submittedAt = 3;
+}
+
+message SubmissionResponse {
+  bool accepted = 1;
+  int32 integrityFlags = 2;
+  string confirmationId = 3;
+}
 
