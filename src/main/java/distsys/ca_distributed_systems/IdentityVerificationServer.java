@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.identity.IdentityVerificationServiceGrpc;
 import com.examproctoring.identity.VerifyRequest;
 import com.examproctoring.identity.VerifyResponse;
@@ -17,9 +12,16 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 
+/**
+ *
+ * @author Kirill
+ */
+
 public class IdentityVerificationServer {
+    
     private int port;
     private Server server;
+    private Serviceregistrar registrar;
     
     public IdentityVerificationServer(int port) {
         this.port = port;
@@ -31,7 +33,11 @@ public class IdentityVerificationServer {
     public void start() throws IOException {
         server.start();
         System.out.println("IdentityVerificationServer started, listening on port " + port);
- 
+        
+        // register this service with jmDNS
+        registrar = new Serviceregistrar();
+        registrar.register("IdentityVerification", port);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down IdentityVerificationServer...");
             IdentityVerificationServer.this.stop();
@@ -41,6 +47,14 @@ public class IdentityVerificationServer {
     public void stop() {
         if (server != null) {
             server.shutdown();
+        }
+        if (registrar != null) {
+            registrar.unregisterAll();
+            try {
+                registrar.close();
+            } catch (IOException e) {
+                System.err.println("Error closing jmDNS: " + e.getMessage());
+            }
         }
     }
     

@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.identity.IdentityVerificationServiceGrpc;
 import com.examproctoring.identity.VerifyRequest;
 import com.examproctoring.identity.VerifyResponse;
@@ -16,7 +11,13 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import java.util.concurrent.TimeUnit;
 
+/**
+ *
+ * @author Kirill
+ */
+
 public class IdentityVerificationClient {
+    
     private ManagedChannel channel;
     private IdentityVerificationServiceGrpc.IdentityVerificationServiceBlockingStub blockingStub;
     

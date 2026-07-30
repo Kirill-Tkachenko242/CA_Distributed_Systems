@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.monitor.ActivityFrame;
 import com.examproctoring.monitor.ActivitySummary;
 import com.examproctoring.monitor.Alert;
@@ -19,6 +14,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+/**
+ *
+ * @author Kirill
+ */
 
 public class ProctoringMonitorClient {
     private ManagedChannel channel;

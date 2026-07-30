@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.monitor.ActivityFrame;
 import com.examproctoring.monitor.ActivitySummary;
 import com.examproctoring.monitor.Alert;
@@ -19,9 +14,16 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 
+/**
+ *
+ * @author Kirill
+ */
+
 public class ProctoringMonitorServer {
+    
     private int port;
     private Server server;
+    private Serviceregistrar registrar;
     
     public ProctoringMonitorServer(int port) {
         this.port = port;
@@ -33,6 +35,11 @@ public class ProctoringMonitorServer {
     public void start() throws IOException {
         server.start();
         System.out.println("ProctoringMonitorServer started, listening on port " + port);
+        
+        // register this service with jmDNS
+        registrar = new Serviceregistrar();
+        registrar.register("ProctoringMonitor", port);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down ProctoringMonitorServer...");
             ProctoringMonitorServer.this.stop();
@@ -42,6 +49,14 @@ public class ProctoringMonitorServer {
     public void stop() {
         if (server != null) {
             server.shutdown();
+        }
+        if (registrar != null) {
+            registrar.unregisterAll();
+            try {
+                registrar.close();
+            } catch (IOException e) {
+                System.err.println("Error closing jmDNS: " + e.getMessage());
+            }
         }
     }
     

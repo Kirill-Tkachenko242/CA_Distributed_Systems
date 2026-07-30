@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.submission.ChatMessage;
 import com.examproctoring.submission.ExamSubmissionServiceGrpc;
 import com.examproctoring.submission.SubmissionRequest;
@@ -18,6 +13,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+/**
+ *
+ * @author Kirill
+ */
 
 public class ExamSubmissionClient {
     
@@ -60,10 +60,8 @@ public class ExamSubmissionClient {
                     }
                 });
         try {
-            String[] studentMessages = {
-                "Can I get more time?",
-                "My internet connection is unstable."
-            };
+            String[] studentMessages = {"Can I get more time?", "My internet connection is unstable."};
+            
             for (String text : studentMessages) {
                 ChatMessage message = ChatMessage.newBuilder()
                         .setSender("student")
@@ -105,7 +103,6 @@ public class ExamSubmissionClient {
         try {
             System.out.println("Testing bidirectional streaming (ProctorChatSession)");
             client.runChatSession();
-            
             System.out.println("\nTesting unary RPC (SubmitExam)");
             client.submitExam("sess-89f59cc1", new String[]{"A", "C", "B"});
         } finally {

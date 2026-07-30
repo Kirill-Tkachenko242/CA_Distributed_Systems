@@ -4,11 +4,6 @@
  */
 package distsys.ca_distributed_systems;
 
-/**
- *
- * @author Kirill
- */
-
 import com.examproctoring.submission.ChatMessage;
 import com.examproctoring.submission.ExamSubmissionServiceGrpc;
 import com.examproctoring.submission.SubmissionRequest;
@@ -19,45 +14,69 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.UUID;
 
+/**
+ *
+ * @author Kirill
+ */
+
 public class ExamSubmissionServer {
+    
     private int port;
     private Server server;
+    private Serviceregistrar registrar;
+    
     public ExamSubmissionServer(int port) {
         this.port = port;
         this.server = ServerBuilder.forPort(port)
                 .addService(new ExamSubmissionImpl())
                 .build();
     }
+    
     public void start() throws IOException {
         server.start();
         System.out.println("ExamSubmissionServer started, listening on port " + port);
- 
+        
+        // register this service with jmDNS
+        registrar = new Serviceregistrar();
+        registrar.register("ExamSubmission", port);
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down ExamSubmissionServer...");
             ExamSubmissionServer.this.stop();
         }));
     }
+    
     public void stop() {
         if (server != null) {
             server.shutdown();
         }
+        if (registrar != null) {
+            registrar.unregisterAll();
+            try {
+                registrar.close();
+            } catch (IOException e) {
+                System.err.println("Error closing jmDNS: " + e.getMessage());
+            }
+        }
     }
+    
     public void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
             server.awaitTermination();
         }
     }
+    
     public static void main(String[] args) throws IOException, InterruptedException {
         int port = 50053;
         ExamSubmissionServer server = new ExamSubmissionServer(port);
         server.start();
         server.blockUntilShutdown();
     } // main
+    
     static class ExamSubmissionImpl extends ExamSubmissionServiceGrpc.ExamSubmissionServiceImplBase {
         @Override
         public StreamObserver<ChatMessage> proctorChatSession(StreamObserver<ChatMessage> responseObserver) {
             return new StreamObserver<ChatMessage>() {
-                
                 @Override
                 public void onNext(ChatMessage message) {
                     System.out.println("[" + message.getSender() + "] " + message.getText());
@@ -86,8 +105,7 @@ public class ExamSubmissionServer {
         
         @Override
         public void submitExam(SubmissionRequest request, StreamObserver<SubmissionResponse> responseObserver) {
-            System.out.println("Received exam submission for session: " + request.getSessionToken()
-                    + " with " + request.getAnswersCount() + " answer(s)");
+            System.out.println("Received exam submission for session: " + request.getSessionToken() + " with " + request.getAnswersCount() + " answer(s)");
             int integrityFlags = request.getAnswersCount() == 0 ? 1 : 0;
             SubmissionResponse response = SubmissionResponse.newBuilder()
                     .setAccepted(true)
