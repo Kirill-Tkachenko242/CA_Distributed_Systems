@@ -79,7 +79,7 @@ public class ExamSubmissionClient {
         finishLatch.await(5, TimeUnit.SECONDS);
     }
     
-    public void submitExam(String sessionToken, String[] answers) {
+    public String submitExam(String sessionToken, String[] answers) {
         SubmissionRequest request = SubmissionRequest.newBuilder()
                 .setSessionToken(sessionToken)
                 .addAllAnswers(java.util.Arrays.asList(answers))
@@ -90,12 +90,11 @@ public class ExamSubmissionClient {
             response = blockingStub.submitExam(request);
         } catch (Exception e) {
             System.err.println("SubmitExam RPC failed: " + e.getMessage());
-            return;
+            return "SubmitExam RPC failed: " + e.getMessage();
         }
-        
-        System.out.println("accepted: " + response.getAccepted());
-        System.out.println("integrityFlags: " + response.getIntegrityFlags());
-        System.out.println("confirmationId: " + response.getConfirmationId());
+        return "Accepted: " + response.getAccepted() + "\nIntegrity Flags: " 
+                + response.getIntegrityFlags() 
+                + "\nConfirmation ID: " + response.getConfirmationId();
     }
     
     public static void main(String[] args) throws InterruptedException {

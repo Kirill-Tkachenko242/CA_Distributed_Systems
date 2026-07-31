@@ -32,7 +32,7 @@ public class IdentityVerificationClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
     
-    public void verifyIdentity(String studentId, String examId, String faceImageHash) {
+    public String verifyIdentity(String studentId, String examId, String faceImageHash) {
         VerifyRequest request = VerifyRequest.newBuilder()
                 .setStudentId(studentId)
                 .setExamId(examId)
@@ -43,12 +43,11 @@ public class IdentityVerificationClient {
             response = blockingStub.verifyIdentity(request);
         } catch (Exception e) {
             System.err.println("RPC failed: " + e.getMessage());
-            return;
+            return "RPC failed: " + e.getMessage();
         }
-        
-        System.out.println("verified: " + response.getVerified());
-        System.out.println("sessionToken: " + response.getSessionToken());
-        System.out.println("message: " + response.getMessage());
+        return "Verified: " + response.getVerified() 
+                + "\nSession Token: " + response.getSessionToken() 
+                + "\nMessage: " + response.getMessage();
     }
     
     public static void main(String[] args) throws InterruptedException {
