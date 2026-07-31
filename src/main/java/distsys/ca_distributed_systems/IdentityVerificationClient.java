@@ -20,12 +20,17 @@ public class IdentityVerificationClient {
     
     private ManagedChannel channel;
     private IdentityVerificationServiceGrpc.IdentityVerificationServiceBlockingStub blockingStub;
+    private String sessionToken;
     
     public IdentityVerificationClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
                 .build();
         this.blockingStub = IdentityVerificationServiceGrpc.newBlockingStub(channel);
+    }
+    
+    public String getSessionToken() {
+        return sessionToken;
     }
     
     public void shutdown() throws InterruptedException {
@@ -45,6 +50,8 @@ public class IdentityVerificationClient {
             System.err.println("RPC failed: " + e.getMessage());
             return "RPC failed: " + e.getMessage();
         }
+        sessionToken = response.getSessionToken();
+        
         return "Verified: " + response.getVerified() 
                 + "\nSession Token: " + response.getSessionToken() 
                 + "\nMessage: " + response.getMessage();

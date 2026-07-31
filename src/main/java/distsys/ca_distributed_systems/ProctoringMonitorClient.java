@@ -35,15 +35,18 @@ public class ProctoringMonitorClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
     
-    public void sendActivityFeed() throws InterruptedException {
+    public String sendActivityFeed() throws InterruptedException {
         CountDownLatch finishLatch = new CountDownLatch(1);
+        final StringBuilder result = new StringBuilder();
         
         StreamObserver<ActivitySummary> responseObserver = 
                 new StreamObserver<ActivitySummary>() {
             @Override
             public void onNext(ActivitySummary summary) {
-                System.out.println("Final summary -> flagCount: " + summary.getFlagCount()
-                        + ", summary: " + summary.getSummary());
+                result.append("Flags: ")
+                .append(summary.getFlagCount())
+                .append("\n")
+                .append(summary.getSummary());
             }
             
             @Override
@@ -74,10 +77,11 @@ public class ProctoringMonitorClient {
             }
         } catch (Exception e) {
             requestObserver.onError(e);
-            return;
+            return "Error: " + e.getMessage();
         }
         requestObserver.onCompleted();
         finishLatch.await(5, TimeUnit.SECONDS);
+        return result.toString();
     }
     
     public void listenForAlerts(String sessionToken) throws InterruptedException {

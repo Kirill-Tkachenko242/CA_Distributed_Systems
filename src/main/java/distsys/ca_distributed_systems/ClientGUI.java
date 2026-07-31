@@ -15,6 +15,7 @@ public class ClientGUI extends javax.swing.JFrame {
     private IdentityVerificationClient identityClient;
     private ProctoringMonitorClient proctorClient;
     private ExamSubmissionClient submissionClient;
+    private String sessionToken;
 
     /**
      * Creates new form ClientGUI
@@ -24,7 +25,7 @@ public class ClientGUI extends javax.swing.JFrame {
         
         jButton2.addActionListener(this::jButton2ActionPerformed);
         jButton4.addActionListener(this::jButton4ActionPerformed);
-        //jButton5.addActionListener(this::jButton5ActionPerformed);
+        jButton5.addActionListener(this::jButton5ActionPerformed);
     
         identityClient = new IdentityVerificationClient("localhost",50051);
         proctorClient = new ProctoringMonitorClient("localhost",50052);
@@ -66,6 +67,8 @@ public class ClientGUI extends javax.swing.JFrame {
         jTextArea2 = new javax.swing.JTextArea();
         jTextField8 = new javax.swing.JTextField();
         jButton5 = new javax.swing.JButton();
+        jScrollPane6 = new javax.swing.JScrollPane();
+        jTextArea5 = new javax.swing.JTextArea();
         jLabel6 = new javax.swing.JLabel();
         jLabel7 = new javax.swing.JLabel();
         jLabel8 = new javax.swing.JLabel();
@@ -78,12 +81,7 @@ public class ClientGUI extends javax.swing.JFrame {
 
         jLabel3.setText("Face Hash");
 
-        jTextField1.setText("jTextField1");
         jTextField1.addActionListener(this::jTextField1ActionPerformed);
-
-        jTextField2.setText("jTextField2");
-
-        jTextField3.setText("jTextField3");
 
         jButton1.setText("Verify ");
         jButton1.addActionListener(this::jButton1ActionPerformed);
@@ -151,6 +149,7 @@ public class ClientGUI extends javax.swing.JFrame {
         jTabbedPane2.addTab("Identity Verification", jPanel1);
 
         jButton2.setText("Send Activity");
+        jButton2.addActionListener(this::jButton2ActionPerformed);
 
         jButton3.setText("Start Alerts");
         jButton3.addActionListener(this::jButton3ActionPerformed);
@@ -206,6 +205,10 @@ public class ClientGUI extends javax.swing.JFrame {
 
         jButton5.setText("Send");
 
+        jTextArea5.setColumns(20);
+        jTextArea5.setRows(5);
+        jScrollPane6.setViewportView(jTextArea5);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -217,11 +220,14 @@ public class ClientGUI extends javax.swing.JFrame {
                     .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(jScrollPane4)
                         .addComponent(jButton4)
-                        .addComponent(jScrollPane3)
                         .addComponent(jLabel4)
                         .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 42, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jTextField8)))
-                .addContainerGap(166, Short.MAX_VALUE))
+                        .addComponent(jTextField8))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 171, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(61, Short.MAX_VALUE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -229,7 +235,9 @@ public class ClientGUI extends javax.swing.JFrame {
                 .addGap(19, 19, 19)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton4)
                 .addGap(18, 18, 18)
@@ -240,7 +248,7 @@ public class ClientGUI extends javax.swing.JFrame {
                 .addComponent(jTextField8, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton5)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(12, Short.MAX_VALUE))
         );
 
         jTabbedPane2.addTab("Exam Submission", jPanel2);
@@ -262,11 +270,11 @@ public class ClientGUI extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addGap(15, 15, 15)
                 .addComponent(jLabel6)
-                .addGap(42, 42, 42)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel7)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addComponent(jLabel8)
-                .addGap(41, 41, 41))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -295,6 +303,8 @@ public class ClientGUI extends javax.swing.JFrame {
                 examId,
                 faceHash
         );
+        
+        sessionToken = identityClient.getSessionToken();
 
         jTextArea1.setText(result);
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -307,49 +317,51 @@ public class ClientGUI extends javax.swing.JFrame {
         new Thread(() -> {
             try {
                 proctorClient.listenForAlerts(
-                    "sess-89f59cc1"
+                    sessionToken
                 );
 
-                jTextArea2.append(
+                jTextArea4.append(
                     "\nAlert listening finished"
                 );
 
             } catch(Exception e){
-                jTextArea2.append(
+                jTextArea4.append(
                     "\n" + e.getMessage()
                 );
             }
 
         }).start();
     }//GEN-LAST:event_jButton3ActionPerformed
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        new Thread(() -> {
+            try {
+                proctorClient.sendActivityFeed();
+
+                jTextArea4.setText(
+                    "Activity stream completed"
+                );
+
+            } catch(Exception e){
+                jTextArea4.setText(
+                    e.getMessage()
+                );
+            }
+        }).start();
+    }//GEN-LAST:event_jButton2ActionPerformed
     
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {
         String answersText = jTextArea3.getText();
         String[] answers = answersText.split("\n");
         String result = submissionClient.submitExam(
-                "sess-89f59cc1",
+                sessionToken,
                 answers
         );
-        jTextArea3.append(
-                "\n\n" + result
+        jTextArea5.append(
+                "\nSubmission result:\n" + result
         );
     }
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {
-        new Thread(() -> {
-            try {
-                proctorClient.sendActivityFeed();
-
-                jTextArea2.setText(
-                    "Activity stream completed"
-                );
-
-            } catch(Exception e){
-                jTextArea2.setText(
-                    e.getMessage()
-                );
-            }
-        }).start();
-    }
+    
     /**
      * @param args the command line arguments
      */
@@ -396,11 +408,13 @@ public class ClientGUI extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
+    private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextArea jTextArea2;
     private javax.swing.JTextArea jTextArea3;
     private javax.swing.JTextArea jTextArea4;
+    private javax.swing.JTextArea jTextArea5;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
