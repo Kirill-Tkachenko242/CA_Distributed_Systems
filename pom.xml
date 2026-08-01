@@ -91,6 +91,12 @@
             <version>1.3.2</version>
             <type>jar</type>
         </dependency>
+        
+        <!-- MetadataUtils -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-testing</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

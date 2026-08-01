@@ -43,11 +43,41 @@ public class IdentityVerificationClient {
                 .setExamId(examId)
                 .setFaceImageHash(faceImageHash)
                 .build();
+        
+        io.grpc.Metadata metadata = new io.grpc.Metadata();
+        io.grpc.Metadata.Key<String> clientIdKey =
+                io.grpc.Metadata.Key.of("client-id", io.grpc.Metadata.ASCII_STRING_MARSHALLER);
+        metadata.put(clientIdKey, "exam-gui-client");
+        
+        io.grpc.ClientInterceptor metadataInterceptor = new io.grpc.ClientInterceptor() {
+            @Override
+            public <ReqT, RespT> io.grpc.ClientCall<ReqT, RespT> interceptCall(
+                    io.grpc.MethodDescriptor<ReqT, RespT> method,
+                    io.grpc.CallOptions callOptions,
+                    io.grpc.Channel next) {
+                return new io.grpc.ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(
+                        next.newCall(method, callOptions)) {
+                    @Override
+                    public void start(Listener<RespT> responseListener, io.grpc.Metadata headers) {
+                        headers.merge(metadata);
+                        super.start(responseListener, headers);
+                    }
+                };
+            }
+        };
+        var stubWithMetadata = blockingStub.withInterceptors(metadataInterceptor);
+        
         VerifyResponse response;
         try {
-            response = blockingStub.verifyIdentity(request);
-        } catch (Exception e) {
-            System.err.println("RPC failed: " + e.getMessage());
+            response = stubWithMetadata
+                    .withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .verifyIdentity(request);
+        } catch (io.grpc.StatusRuntimeException e) {
+            if (e.getStatus().getCode() == io.grpc.Status.Code.DEADLINE_EXCEEDED) {
+                return "RPC failed: server took too long to respond (deadline exceeded)";
+            } else if (e.getStatus().getCode() == io.grpc.Status.Code.INVALID_ARGUMENT) {
+                return "RPC failed: invalid input - " + e.getStatus().getDescription();
+            }
             return "RPC failed: " + e.getMessage();
         }
         sessionToken = response.getSessionToken();
