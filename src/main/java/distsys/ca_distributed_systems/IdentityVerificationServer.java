@@ -78,6 +78,16 @@ public class IdentityVerificationServer {
         public void verifyIdentity(VerifyRequest request, 
                 StreamObserver<VerifyResponse> responseObserver) {
             
+            // remote error handling: validate input, return proper gRPC status
+            if (request.getStudentId() == null || request.getStudentId().isEmpty()) {
+                responseObserver.onError(
+                    io.grpc.Status.INVALID_ARGUMENT
+                        .withDescription("studentId must not be empty")
+                        .asRuntimeException()
+                );
+                return;
+            }
+            
             System.out.println("Received verification request for studentId: " + 
                     request.getStudentId() + ", examId: " + request.getExamId());
             
