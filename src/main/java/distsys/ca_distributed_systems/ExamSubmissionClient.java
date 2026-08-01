@@ -13,6 +13,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  *
@@ -24,6 +25,7 @@ public class ExamSubmissionClient {
     private ManagedChannel channel;
     private ExamSubmissionServiceGrpc.ExamSubmissionServiceStub asyncStub;
     private ExamSubmissionServiceGrpc.ExamSubmissionServiceBlockingStub blockingStub;
+    private StreamObserver<ChatMessage> chatRequestObserver;
     
     public ExamSubmissionClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
@@ -37,46 +39,42 @@ public class ExamSubmissionClient {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
     
-    public void runChatSession() throws InterruptedException {
-        CountDownLatch finishLatch = new CountDownLatch(1);
-        StreamObserver<ChatMessage> requestObserver = asyncStub.proctorChatSession(
-                new StreamObserver<ChatMessage>() {
-                    
-                    @Override
-                    public void onNext(ChatMessage message) {
-                        System.out.println("[" + message.getSender() + "] " + message.getText());
-                    }
-                    
-                    @Override
-                    public void onError(Throwable t) {
-                        System.err.println("ProctorChatSession failed: " + t.getMessage());
-                        finishLatch.countDown();
-                    }
-                    
-                    @Override
-                    public void onCompleted() {
-                        System.out.println("Chat session completed.");
-                        finishLatch.countDown();
-                    }
-                });
-        try {
-            String[] studentMessages = {"Can I get more time?", "My internet connection is unstable."};
-            
-            for (String text : studentMessages) {
-                ChatMessage message = ChatMessage.newBuilder()
-                        .setSender("student")
-                        .setText(text)
-                        .setTimestamp(System.currentTimeMillis())
-                        .build();
-                requestObserver.onNext(message);
-                Thread.sleep(500);
+    public void startChatSession(Consumer<String> onMessage) {
+        chatRequestObserver = asyncStub.proctorChatSession(new StreamObserver<ChatMessage>() {
+            @Override
+            public void onNext(ChatMessage message) {
+                onMessage.accept("[" + message.getSender() + "] " + message.getText());
             }
-        } catch (Exception e) {
-            requestObserver.onError(e);
-            return;
+            
+            @Override
+            public void onError(Throwable t) {
+                onMessage.accept("Chat error: " + t.getMessage());
+            }
+            
+            @Override
+            public void onCompleted() {
+                onMessage.accept("Chat session closed by server.");
+            }
+        });
+    }
+    
+    public void sendChatMessage(String text) {
+        if (chatRequestObserver == null) {
+            throw new IllegalStateException("Chat session not started - call startChatSession first");
         }
-        requestObserver.onCompleted();
-        finishLatch.await(5, TimeUnit.SECONDS);
+        ChatMessage message = ChatMessage.newBuilder()
+                .setSender("student")
+                .setText(text)
+                .setTimestamp(System.currentTimeMillis())
+                .build();
+        chatRequestObserver.onNext(message);
+    }
+    
+    public void closeChatSession() {
+        if (chatRequestObserver != null) {
+            chatRequestObserver.onCompleted();
+            chatRequestObserver = null;
+        }
     }
     
     public String submitExam(String sessionToken, String[] answers) {
@@ -92,20 +90,22 @@ public class ExamSubmissionClient {
             System.err.println("SubmitExam RPC failed: " + e.getMessage());
             return "SubmitExam RPC failed: " + e.getMessage();
         }
-        return "Accepted: " + response.getAccepted() + "\nIntegrity Flags: " 
-                + response.getIntegrityFlags() 
+        return "Accepted: " + response.getAccepted() + "\nIntegrity Flags: "
+                + response.getIntegrityFlags()
                 + "\nConfirmation ID: " + response.getConfirmationId();
     }
     
     public static void main(String[] args) throws InterruptedException {
         ExamSubmissionClient client = new ExamSubmissionClient("localhost", 50053);
         try {
-            System.out.println("Testing bidirectional streaming (ProctorChatSession)");
-            client.runChatSession();
+            client.startChatSession(msg -> System.out.println(msg));
+            client.sendChatMessage("Can I get more time?");
+            Thread.sleep(500);
+            client.closeChatSession();
             System.out.println("\nTesting unary RPC (SubmitExam)");
-            client.submitExam("sess-89f59cc1", new String[]{"A", "C", "B"});
+            System.out.println(client.submitExam("sess-89f59cc1", new String[]{"A", "C", "B"}));
         } finally {
             client.shutdown();
         }
-    } //main
+    } // main
 } // class

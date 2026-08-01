@@ -16,6 +16,7 @@ public class ClientGUI extends javax.swing.JFrame {
     private ProctoringMonitorClient proctorClient;
     private ExamSubmissionClient submissionClient;
     private String sessionToken;
+    private ServiceDiscovery discovery;
 
     /**
      * Creates new form ClientGUI
@@ -30,6 +31,15 @@ public class ClientGUI extends javax.swing.JFrame {
         identityClient = new IdentityVerificationClient("localhost",50051);
         proctorClient = new ProctoringMonitorClient("localhost",50052);
         submissionClient = new ExamSubmissionClient("localhost",50053);
+        submissionClient.startChatSession(msg -> javax.swing.SwingUtilities.invokeLater(() -> jTextArea2.append(msg + "\n")));
+        
+        try {
+            discovery = new ServiceDiscovery();
+        } catch (Exception e) {
+            logger.log(java.util.logging.Level.SEVERE, "Discovery failed", e);
+        }
+        javax.swing.Timer statusTimer = new javax.swing.Timer(1000, e -> updateStatusLabels());
+        statusTimer.start();
     }
 
     /**
@@ -336,11 +346,9 @@ public class ClientGUI extends javax.swing.JFrame {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         new Thread(() -> {
             try {
-                proctorClient.sendActivityFeed();
+                String result = proctorClient.sendActivityFeed();
 
-                jTextArea4.setText(
-                    "Activity stream completed"
-                );
+                jTextArea4.setText(result);
 
             } catch(Exception e){
                 jTextArea4.setText(
@@ -360,6 +368,25 @@ public class ClientGUI extends javax.swing.JFrame {
         jTextArea5.append(
                 "\nSubmission result:\n" + result
         );
+    }
+    
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {
+        String text = jTextField8.getText();
+        if (text == null || text.isEmpty()) return;
+        jTextArea2.append("[student] " + text + "\n");
+        submissionClient.sendChatMessage(text);
+        jTextField8.setText("");
+    }
+    
+    private void updateStatusLabels() {
+        jLabel6.setText("Identity: " + statusFor("IdentityVerification"));
+        jLabel8.setText("Proctor: " + statusFor("ProctoringMonitor"));
+        jLabel7.setText("Submission: " + statusFor("ExamSubmission"));
+    }
+    
+    private String statusFor(String serviceName) {
+        var info = discovery.getService(serviceName);
+        return info != null ? "Online (" + info.getPort() + ")" : "Not Found";
     }
     
     /**
