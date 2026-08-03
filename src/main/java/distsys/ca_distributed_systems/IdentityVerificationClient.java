@@ -22,6 +22,7 @@ public class IdentityVerificationClient {
     private IdentityVerificationServiceGrpc.IdentityVerificationServiceBlockingStub blockingStub;
     private String sessionToken;
     
+    // opens a gRPC connection to the server and creates a blocking
     public IdentityVerificationClient(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
@@ -29,10 +30,12 @@ public class IdentityVerificationClient {
         this.blockingStub = IdentityVerificationServiceGrpc.newBlockingStub(channel);
     }
     
+    // returns the session token from the last successful verification
     public String getSessionToken() {
         return sessionToken;
     }
     
+    // closes the gRPC connection
     public void shutdown() throws InterruptedException {
         channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }

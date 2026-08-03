@@ -23,13 +23,15 @@ public class IdentityVerificationServer {
     private Server server;
     private Serviceregistrar registrar;
     
+    // creates the gRPC server and attaches our service implementation
     public IdentityVerificationServer(int port) {
         this.port = port;
         this.server = ServerBuilder.forPort(port)
                 .addService(new IdentityVerificationImpl())
                 .build();
     }
-    
+
+    // starts listening gRPC calls and registers service with jmDNS
     public void start() throws IOException {
         server.start();
         System.out.println("IdentityVerificationServer started, listening on port " + port);
@@ -44,6 +46,7 @@ public class IdentityVerificationServer {
         }));
     }
     
+    // stops the gRPC server down and removes this service jmDNS registration
     public void stop() {
         if (server != null) {
             server.shutdown();
@@ -58,6 +61,7 @@ public class IdentityVerificationServer {
         }
     }
     
+    // keeps the server process alive until it is shut down
     public void blockUntilShutdown() throws InterruptedException {
         if (server != null) {
             server.awaitTermination();
